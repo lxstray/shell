@@ -29,12 +29,15 @@ Item {
     id: searchArea
     anchors.left: parent.left; anchors.leftMargin: 8
     anchors.right: parent.right; anchors.rightMargin: 8
+    anchors.bottom: root.isBottom ? parent.bottom : undefined
+    anchors.bottomMargin: root.isBottom ? (root.open ? 8 : -56) : 0
 
-    y: root.isBottom ? (root.open ? parent.height - height - 6 : parent.height + 28) : (root.open ? 6 : -56)
+    y: root.isBottom ? 0 : (root.open ? 8 : -56)
     height: 28
     opacity: root.open ? 1 : 0
 
     Behavior on y { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+    Behavior on anchors.bottomMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
     Behavior on opacity { NumberAnimation { duration: 200 } }
 
     color: "#1a1a1a"

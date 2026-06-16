@@ -75,6 +75,7 @@ PanelWindow {
         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
         spacing: 4
         visible: isHorizontal
+        enabled: !root.launcherOpen
 
         x: root.launcherOpen ? -120 : 0
         opacity: root.launcherOpen ? 0 : 1
@@ -89,6 +90,7 @@ PanelWindow {
         anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
         spacing: 4
         visible: isHorizontal
+        enabled: !root.launcherOpen
 
         x: root.launcherOpen ? parent.width + 120 : 0
         opacity: root.launcherOpen ? 0 : 1
@@ -103,6 +105,8 @@ PanelWindow {
       Item {
         anchors { top: parent.top; topMargin: 8; bottom: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
         visible: !isHorizontal
+        enabled: !root.launcherOpen
+
         x: root.launcherOpen ? -90 : 0
         opacity: root.launcherOpen ? 0 : 1
 
@@ -119,6 +123,8 @@ PanelWindow {
       Item {
         anchors { top: parent.verticalCenter; bottom: parent.bottom; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
         visible: !isHorizontal
+        enabled: !root.launcherOpen
+
         x: root.launcherOpen ? 90 : 0
         opacity: root.launcherOpen ? 0 : 1
 
@@ -137,11 +143,11 @@ PanelWindow {
       id: launcher
       open: root.launcherOpen
       barPosition: root.pos
-      anchors.top: isHorizontal ? (pos === "bottom" ? parent.top : barStrip.bottom) : parent.top
-      anchors.left: isHorizontal ? parent.left : (pos === "right" ? parent.left : barStrip.right)
-      anchors.right: isHorizontal ? parent.right : (pos === "right" ? barStrip.left : parent.right)
-      anchors.bottom: isHorizontal ? (pos === "bottom" ? barStrip.top : parent.bottom) : parent.bottom
-      anchors.topMargin: 6
+      anchors.top: isHorizontal ? (pos === "bottom" ? parent.top : (root.launcherOpen ? parent.top : barStrip.bottom)) : parent.top
+      anchors.left: isHorizontal ? parent.left : (pos === "right" ? parent.left : (root.launcherOpen ? parent.left : barStrip.right))
+      anchors.right: isHorizontal ? parent.right : (pos === "right" ? (root.launcherOpen ? parent.right : barStrip.left) : parent.right)
+      anchors.bottom: isHorizontal ? (pos === "bottom" ? (root.launcherOpen ? parent.bottom : barStrip.top) : parent.bottom) : parent.bottom
+      anchors.topMargin: 0
       onAppLaunched: root.appLaunched()
       onCanceled: root.canceled()
       onOpenSettings: root.openSettings()
