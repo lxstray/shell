@@ -6,6 +6,9 @@ A minimal Quickshell panel for Niri, featuring a merged bar/launcher with morphi
 
 - [Niri](https://github.com/YaLTeR/niri) (window manager)
 - [Quickshell](https://github.com/quickshell-mirror/quickshell) (runtime)
+- `upower` — battery status (most distros include this)
+- `powerprofilesctl` — for power plan switching (part of `power-profiles-daemon`)
+- `Material Symbols Rounded` font — for icons (included in most font packages)
 
 ## Installation
 

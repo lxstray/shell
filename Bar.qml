@@ -7,6 +7,7 @@ PanelWindow {
   id: root
 
   property bool launcherOpen: false
+  property bool batteryPanelOpen: false
   property var settings: null
 
   readonly property real barRatio: 0.25
@@ -24,7 +25,12 @@ PanelWindow {
 
   property var scr: Quickshell.screens[0] || screen
 
-  onPosChanged: launcherOpen = false
+  BatteryData { id: batteryData }
+
+  onPosChanged: {
+    launcherOpen = false
+    batteryPanelOpen = false
+  }
 
   anchors.left: pos !== "right"
   anchors.right: pos !== "left"
@@ -39,16 +45,25 @@ PanelWindow {
   margins.left: pos === "left" ? (isIsland ? 8 : 0) : (isIsland ? islandMargin : 0)
   margins.right: pos === "right" ? (isIsland ? 8 : 0) : (isIsland ? islandMargin : 0)
 
-  WlrLayershell.keyboardFocus: launcherOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+  WlrLayershell.keyboardFocus: launcherOpen || batteryPanelOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
   WlrLayershell.layer: WlrLayer.Top
   WlrLayershell.exclusionMode: ExclusionMode.Normal
   WlrLayershell.exclusiveZone: 32
 
   readonly property real closedThickness: 32
   readonly property real maxOpenThickness: 572
+  readonly property real batteryPanelExtra: 300
 
-  implicitHeight: isHorizontal ? (launcherOpen ? Math.min(maxOpenThickness, 54 + launcher.desiredContentHeight) : closedThickness) : (scr ? scr.height : 600)
-  implicitWidth: isHorizontal ? (scr ? scr.width : 800) : (launcherOpen ? maxOpenThickness : closedThickness)
+  implicitHeight: isHorizontal ? (
+    launcherOpen ? Math.min(maxOpenThickness, 54 + launcher.desiredContentHeight) :
+    batteryPanelOpen ? batteryPanelExtra :
+    closedThickness
+  ) : (scr ? scr.height : 600)
+  implicitWidth: isHorizontal ? (scr ? scr.width : 800) : (
+    launcherOpen ? maxOpenThickness :
+    batteryPanelOpen ? batteryPanelExtra :
+    closedThickness
+  )
 
   Behavior on implicitHeight {
     NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
@@ -58,98 +73,121 @@ PanelWindow {
     NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
   }
 
-  Rectangle {
+  Item {
+    id: contentContainer
     anchors.fill: parent
-    radius: isIsland ? 16 : 0
-    color: "#111"
-    border { color: "#2a2a2a"; width: isIsland ? 1 : 0 }
-    clip: true
 
-    Item {
-      id: barStrip
-      x: isHorizontal ? 0 : (pos === "right" ? parent.width - 32 : 0)
-      y: isHorizontal ? (pos === "bottom" ? parent.height - 32 : 0) : 0
-      width: isHorizontal ? parent.width : 32
-      height: isHorizontal ? 32 : parent.height
+    Rectangle {
+      id: mainRect
+      anchors.fill: parent
+      radius: isIsland ? 16 : 0
+      color: "#111"
+      border { color: "#2a2a2a"; width: isIsland ? 1 : 0 }
+      clip: false
 
-      // Horizontal mode content (top/bottom bar)
-      RowLayout {
-        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-        spacing: 4
-        visible: isHorizontal
-        enabled: !root.launcherOpen
-
-        x: root.launcherOpen ? -120 : 0
-        opacity: root.launcherOpen ? 0 : 1
-
-        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
-
-        Workspaces { horizontal: true }
-      }
-
-      RowLayout {
-        anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
-        spacing: 4
-        visible: isHorizontal
-        enabled: !root.launcherOpen
-
-        x: root.launcherOpen ? parent.width + 120 : 0
-        opacity: root.launcherOpen ? 0 : 1
-
-        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
-
-        Clock { horizontal: true }
-      }
-
-      // Vertical mode content (left/right bar)
       Item {
-        anchors { top: parent.top; topMargin: 8; bottom: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
-        visible: !isHorizontal
-        enabled: !root.launcherOpen
+        id: barStrip
+        x: isHorizontal ? 0 : (pos === "right" ? parent.width - 32 : 0)
+        y: isHorizontal ? (pos === "bottom" ? parent.height - 32 : 0) : 0
+        width: isHorizontal ? parent.width : 32
+        height: isHorizontal ? 32 : parent.height
+        clip: true
 
-        x: root.launcherOpen ? -90 : 0
-        opacity: root.launcherOpen ? 0 : 1
+        readonly property bool panelOpen: root.launcherOpen || root.batteryPanelOpen
 
-        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+        // Horizontal mode content (top/bottom bar)
+        RowLayout {
+          anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+          spacing: 4
+          visible: isHorizontal
+          enabled: !parent.panelOpen
 
-        Column {
-          anchors.centerIn: parent
-          spacing: 6
-          Workspaces { horizontal: false }
+          x: parent.panelOpen ? -120 : 0
+          opacity: parent.panelOpen ? 0 : 1
+
+          Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+          Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+
+          Workspaces { horizontal: true }
         }
-      }
 
-      Item {
-        anchors { top: parent.verticalCenter; bottom: parent.bottom; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
-        visible: !isHorizontal
-        enabled: !root.launcherOpen
+        RowLayout {
+          anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+          spacing: 4
+          visible: isHorizontal
+          enabled: !parent.panelOpen
 
-        x: root.launcherOpen ? 90 : 0
-        opacity: root.launcherOpen ? 0 : 1
+          x: parent.panelOpen ? parent.width + 120 : 0
+          opacity: parent.panelOpen ? 0 : 1
 
-        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+          Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+          Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
-        Column {
-          anchors.centerIn: parent
-          spacing: 6
-          Clock { horizontal: false }
+          BatteryIndicator { batteryData: batteryData; onClicked: root.batteryPanelOpen = !root.batteryPanelOpen }
+          Clock { horizontal: true }
+        }
+
+        // Vertical mode content (left/right bar)
+        Item {
+          anchors { top: parent.top; topMargin: 8; bottom: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
+          visible: !isHorizontal
+          enabled: !parent.panelOpen
+
+          x: parent.panelOpen ? -90 : 0
+          opacity: parent.panelOpen ? 0 : 1
+
+          Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+          Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+
+          Column {
+            anchors.centerIn: parent
+            spacing: 6
+            Workspaces { horizontal: false }
+          }
+        }
+
+        Item {
+          anchors { top: parent.verticalCenter; bottom: parent.bottom; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
+          visible: !isHorizontal
+          enabled: !parent.panelOpen
+
+          x: parent.panelOpen ? 90 : 0
+          opacity: parent.panelOpen ? 0 : 1
+
+          Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+          Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+
+          Column {
+            anchors.centerIn: parent
+            spacing: 6
+            BatteryIndicator { batteryData: batteryData; horizontal: false; onClicked: root.batteryPanelOpen = !root.batteryPanelOpen }
+            Clock { horizontal: false }
+          }
         }
       }
     }
 
+    BatteryPanel {
+      id: batteryPanel
+      batteryData: batteryData
+      open: root.batteryPanelOpen
+      barPosition: root.pos
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      onCanceled: root.batteryPanelOpen = false
+    }
+
     Launcher {
       id: launcher
+      z: 1
       open: root.launcherOpen
       barPosition: root.pos
       anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
       anchors.bottom: parent.bottom
-      anchors.topMargin: 0
       onAppLaunched: root.appLaunched()
       onCanceled: root.canceled()
       onOpenSettings: root.openSettings()
@@ -158,8 +196,18 @@ PanelWindow {
 
   onLauncherOpenChanged: {
     if (launcherOpen) {
+      batteryPanelOpen = false
       Qt.callLater(function() {
         launcher.focusSearch()
+      })
+    }
+  }
+
+  onBatteryPanelOpenChanged: {
+    if (batteryPanelOpen) {
+      launcherOpen = false
+      Qt.callLater(function() {
+        batteryPanel.forceActiveFocus()
       })
     }
   }
