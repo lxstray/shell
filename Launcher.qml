@@ -8,6 +8,8 @@ Item {
 
   property bool open: false
 
+  property real desiredContentHeight: 0
+
   signal appLaunched()
   signal canceled()
 
@@ -47,7 +49,10 @@ Item {
       color: "#eee"
       font { pixelSize: 17; weight: Font.Medium }
 
-      onTextChanged: launcherData.filterApps(text)
+      onTextChanged: {
+        launcherData.filterApps(text)
+        listArea.updateContentHeight()
+      }
       Keys.onEscapePressed: root.canceled()
       Keys.onReturnPressed: selectLaunch()
       Keys.onDownPressed: selectNext()
@@ -59,96 +64,98 @@ Item {
     id: listArea
     anchors { left: parent.left; right: parent.right; top: parent.top }
     anchors.topMargin: 6
-    height: root.open ? parent.height - anchors.topMargin : 0
+    height: root.open ? Math.min(parent.height - anchors.topMargin, root.desiredContentHeight + 16) : 0
 
     opacity: root.open ? 1 : 0
 
     Behavior on opacity { NumberAnimation { duration: 200 } }
+    Behavior on height { NumberAnimation { duration: 50; easing.type: Easing.OutCubic } }
 
-    ColumnLayout {
+    function updateContentHeight() {
+      root.desiredContentHeight = listView.count > 0
+        ? listView.count * 37 - 1
+        : (searchInput.text.length > 0 && launcherData.filteredApps.length === 0 ? 24 : 0)
+    }
+
+    Text {
+      anchors.centerIn: parent
+      height: 24
+      visible: launcherData.filteredApps.length === 0 && searchInput.text.length > 0
+      text: "No applications found"
+      color: "#555"
+      font { pixelSize: 13; italic: true }
+      horizontalAlignment: Text.AlignHCenter
+      verticalAlignment: Text.AlignVCenter
+    }
+
+    ListView {
+      id: listView
       anchors.fill: parent
       anchors.margins: 8
-      spacing: 4
+      clip: true
+      spacing: 1
+      cacheBuffer: 200
 
-      Text {
-        Layout.fillWidth: true
-        height: 24
-        visible: launcherData.filteredApps.length === 0 && searchInput.text.length > 0
-        text: "No applications found"
-        color: "#555"
-        font { pixelSize: 13; italic: true }
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+      model: launcherData.filteredApps
+      onCountChanged: listArea.updateContentHeight()
+      currentIndex: 0
+      highlightFollowsCurrentItem: false
+
+      highlight: Rectangle {
+        radius: 6
+        color: "#2a2a2a"
+        y: listView.currentItem?.y ?? 0
+        width: listView.width
+        height: 36
+
+        Behavior on y {
+          NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+        }
       }
 
-      ListView {
-        id: listView
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        clip: true
-        spacing: 1
-        cacheBuffer: 200
+      addDisplaced: Transition {
+        NumberAnimation { properties: "y"; duration: 80; easing.type: Easing.OutCubic }
+      }
 
-        model: launcherData.filteredApps
-        currentIndex: 0
-        highlightFollowsCurrentItem: false
+      removeDisplaced: Transition {
+        NumberAnimation { properties: "y"; duration: 80; easing.type: Easing.OutCubic }
+      }
 
-        highlight: Rectangle {
-          radius: 6
-          color: "#2a2a2a"
-          y: listView.currentItem?.y ?? 0
-          width: listView.width
-          height: 36
+      delegate: Item {
+        required property var modelData
+        required property int index
+        width: ListView.view.width
+        height: 36
 
-          Behavior on y {
-            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-          }
-        }
+        RowLayout {
+          anchors { left: parent.left; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+          spacing: 8
 
-        addDisplaced: Transition {
-          NumberAnimation { properties: "y"; duration: 80; easing.type: Easing.OutCubic }
-        }
-
-        removeDisplaced: Transition {
-          NumberAnimation { properties: "y"; duration: 80; easing.type: Easing.OutCubic }
-        }
-
-        delegate: Item {
-          required property var modelData
-          required property int index
-          width: ListView.view.width
-          height: 36
-
-          RowLayout {
-            anchors { left: parent.left; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            spacing: 8
-
-            IconImage {
-              implicitSize: 24
-              mipmap: true
-              asynchronous: true
-              source: Quickshell.iconPath(modelData.icon)
-              Component.onCompleted: {
-                backer.sourceSize.width = 48
-                backer.sourceSize.height = 48
-              }
-            }
-
-            Text {
-              text: modelData.name
-              color: "#eee"
-              font.pixelSize: 17
-              elide: Text.ElideRight
-              Layout.fillWidth: true
+          IconImage {
+            implicitSize: 24
+            mipmap: true
+            asynchronous: true
+            source: Quickshell.iconPath(modelData.icon)
+            Component.onCompleted: {
+              backer.sourceSize.width = 48
+              backer.sourceSize.height = 48
             }
           }
 
-          MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            onEntered: listView.currentIndex = index
-            onClicked: launchApp(modelData)
+          Text {
+            text: modelData.name
+            color: "#eee"
+            font.pixelSize: 17
+            elide: Text.ElideRight
+            Layout.fillWidth: true
           }
+        }
+
+        MouseArea {
+          anchors.fill: parent
+          hoverEnabled: true
+          onEntered: listView.currentIndex = index
+          onClicked: launchApp(modelData)
         }
       }
     }

@@ -28,12 +28,12 @@ PanelWindow {
   WlrLayershell.exclusiveZone: 32
 
   readonly property real closedHeight: 32
-  readonly property real openHeight: 572
+  readonly property real maxOpenHeight: 572
 
-  implicitHeight: launcherOpen ? openHeight : closedHeight
+  implicitHeight: launcherOpen ? Math.min(maxOpenHeight, 54 + launcher.desiredContentHeight) : closedHeight
 
   Behavior on implicitHeight {
-    NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
   }
 
   Rectangle {
