@@ -49,11 +49,11 @@ PanelWindow {
   implicitWidth: isHorizontal ? (scr ? scr.width : 800) : (launcherOpen ? maxOpenThickness : closedThickness)
 
   Behavior on implicitHeight {
-    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
   }
 
   Behavior on implicitWidth {
-    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
   }
 
   Rectangle {
@@ -80,8 +80,8 @@ PanelWindow {
         x: root.launcherOpen ? -120 : 0
         opacity: root.launcherOpen ? 0 : 1
 
-        Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 80 } }
 
         Workspaces { horizontal: true }
       }
@@ -95,8 +95,8 @@ PanelWindow {
         x: root.launcherOpen ? parent.width + 120 : 0
         opacity: root.launcherOpen ? 0 : 1
 
-        Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 80 } }
 
         Clock { horizontal: true }
       }
@@ -110,8 +110,8 @@ PanelWindow {
         x: root.launcherOpen ? -90 : 0
         opacity: root.launcherOpen ? 0 : 1
 
-        Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 80 } }
 
         Column {
           anchors.centerIn: parent
@@ -128,8 +128,8 @@ PanelWindow {
         x: root.launcherOpen ? 90 : 0
         opacity: root.launcherOpen ? 0 : 1
 
-        Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 80 } }
 
         Column {
           anchors.centerIn: parent

@@ -36,9 +36,9 @@ Item {
     height: 28
     opacity: root.open ? 1 : 0
 
-    Behavior on y { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-    Behavior on anchors.bottomMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: 200 } }
+    Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on anchors.bottomMargin { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: 80 } }
 
     color: "#1a1a1a"
     radius: 6
@@ -85,8 +85,8 @@ Item {
 
     opacity: root.open ? 1 : 0
 
-    Behavior on opacity { NumberAnimation { duration: 200 } }
-    Behavior on height { NumberAnimation { duration: 50; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: 80 } }
+    Behavior on height { NumberAnimation { duration: 30; easing.type: Easing.OutCubic } }
 
     function updateContentHeight() {
       root.desiredContentHeight = listView.count > 0
@@ -148,11 +148,13 @@ Item {
           anchors { left: parent.left; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
           spacing: 8
 
-          IconImage {
-            implicitSize: 24
+          Image {
+            source: modelData.icon.indexOf("file://") === 0 ? modelData.icon : Quickshell.iconPath(modelData.icon)
+            sourceSize.width: 32
+            sourceSize.height: 32
+            fillMode: Image.PreserveAspectFit
             mipmap: true
             asynchronous: true
-            source: modelData.icon.indexOf("file://") === 0 ? modelData.icon : Quickshell.iconPath(modelData.icon)
           }
 
           Text {
