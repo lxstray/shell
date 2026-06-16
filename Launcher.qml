@@ -7,15 +7,22 @@ Item {
   id: root
 
   property bool open: false
+  property string barPosition: "top"
 
   property real desiredContentHeight: 0
 
+  readonly property bool isBottom: barPosition === "bottom"
+
   signal appLaunched()
   signal canceled()
+  signal openSettings()
 
   LauncherData {
     id: launcherData
     onAppLaunched: root.appLaunched()
+    onSpecialLaunch: function(id) {
+      if (id === "settings") root.openSettings()
+    }
   }
 
   Rectangle {
@@ -23,7 +30,7 @@ Item {
     anchors.left: parent.left; anchors.leftMargin: 8
     anchors.right: parent.right; anchors.rightMargin: 8
 
-    y: root.open ? -24 : -86
+    y: root.isBottom ? (root.open ? parent.height - height - 6 : parent.height + 28) : (root.open ? 6 : -56)
     height: 28
     opacity: root.open ? 1 : 0
 
@@ -62,9 +69,16 @@ Item {
 
   Item {
     id: listArea
-    anchors { left: parent.left; right: parent.right; top: parent.top }
-    anchors.topMargin: 6
-    height: root.open ? Math.min(parent.height - anchors.topMargin, root.desiredContentHeight + 16) : 0
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: root.isBottom ? undefined : searchArea.bottom
+    anchors.bottom: root.isBottom ? searchArea.top : undefined
+    anchors.topMargin: root.isBottom ? 0 : 4
+    anchors.bottomMargin: root.isBottom ? 4 : 0
+    height: root.open ? Math.min(
+      root.isBottom ? searchArea.y - 4 : parent.height - searchArea.y - searchArea.height - 4,
+      root.desiredContentHeight + 16
+    ) : 0
 
     opacity: root.open ? 1 : 0
 
@@ -135,11 +149,7 @@ Item {
             implicitSize: 24
             mipmap: true
             asynchronous: true
-            source: Quickshell.iconPath(modelData.icon)
-            Component.onCompleted: {
-              backer.sourceSize.width = 48
-              backer.sourceSize.height = 48
-            }
+            source: modelData.icon.indexOf("file://") === 0 ? modelData.icon : Quickshell.iconPath(modelData.icon)
           }
 
           Text {

@@ -11,6 +11,7 @@ Item {
   property string pendingQuery: ""
 
   signal appLaunched(var app)
+  signal specialLaunch(string id)
 
   Timer {
     id: filterTimer
@@ -59,6 +60,14 @@ Item {
       if (!entries[i].noDisplay) apps.push(entries[i])
     }
     if (apps.length) {
+      apps.unshift({
+        name: "Settings",
+        id: "_settings",
+        icon: "file:///usr/share/icons/AdwaitaLegacy/48x48/legacy/emblem-system.png",
+        genericName: "",
+        noDisplay: false,
+        execute: function() {}
+      })
       allApps = apps
       doFilter("")
       return true
@@ -94,8 +103,13 @@ Item {
   }
 
   function launchApp(app) {
-    app.execute()
     incrementCount(app.id)
+    if (app.id === "_settings") {
+      root.specialLaunch("settings")
+      root.appLaunched(app)
+      return
+    }
+    app.execute()
     root.appLaunched(app)
   }
 

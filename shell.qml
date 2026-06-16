@@ -5,18 +5,43 @@ import Quickshell.Io
 import QtQuick
 
 ShellRoot {
+  SettingsData {
+    id: settingsData
+    settingsPath: Qt.resolvedUrl("settings.json")
+    Component.onCompleted: load()
+  }
+
   IpcHandler {
     target: "launcher"
     function onSignalTriggered(signal: string, value: string) {
       if (signal === "toggle") {
-        bar.launcherOpen = !bar.launcherOpen
+        var b = barLoader.item
+        if (b) b.launcherOpen = !b.launcherOpen
       }
     }
   }
 
-  Bar {
-    id: bar
-    onAppLaunched: bar.launcherOpen = false
-    onCanceled: bar.launcherOpen = false
+  Loader {
+    id: barLoader
+    active: settingsData.ready
+    sourceComponent: Bar {
+      id: bar
+      settings: settingsData
+      onAppLaunched: bar.launcherOpen = false
+      onCanceled: bar.launcherOpen = false
+      onOpenSettings: {
+        settingsPopup.show()
+        settingsPopup.requestActivate()
+      }
+    }
+  }
+
+  SettingsWindow {
+    id: settingsPopup
+    settings: settingsData
+    onClosing: function(close) {
+      close.accepted = false
+      hide()
+    }
   }
 }
