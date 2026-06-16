@@ -11,6 +11,7 @@ PanelWindow {
   property var settings: null
 
   readonly property real barRatio: 0.25
+  readonly property real verticalBarRatio: 0.35
 
   signal appLaunched()
   signal canceled()
@@ -39,11 +40,12 @@ PanelWindow {
 
   readonly property real axisSize: scr ? (isHorizontal ? scr.width : scr.height) : 100
   readonly property real islandMargin: scr ? Math.round(axisSize * (1 - barRatio) / 2) : 0
+  readonly property real verticalIslandMargin: scr ? Math.round(axisSize * (1 - verticalBarRatio) / 2) : 0
 
-  margins.top: pos === "top" ? (isIsland ? 8 : 0) : (isIsland ? islandMargin : 0)
-  margins.bottom: pos === "bottom" ? (isIsland ? 8 : 0) : (isIsland ? islandMargin : 0)
-  margins.left: pos === "left" ? (isIsland ? 8 : 0) : (isIsland ? islandMargin : 0)
-  margins.right: pos === "right" ? (isIsland ? 8 : 0) : (isIsland ? islandMargin : 0)
+  margins.top: pos === "top" ? (isIsland ? 8 : 0) : (isIsland ? (isHorizontal ? islandMargin : verticalIslandMargin) : 0)
+  margins.bottom: pos === "bottom" ? (isIsland ? 8 : 0) : (isIsland ? (isHorizontal ? islandMargin : verticalIslandMargin) : 0)
+  margins.left: pos === "left" ? (isIsland ? 8 : 0) : (isIsland ? (isHorizontal ? islandMargin : verticalIslandMargin) : 0)
+  margins.right: pos === "right" ? (isIsland ? 8 : 0) : (isIsland ? (isHorizontal ? islandMargin : verticalIslandMargin) : 0)
 
   WlrLayershell.keyboardFocus: launcherOpen || batteryPanelOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
   WlrLayershell.layer: WlrLayer.Top
@@ -52,7 +54,7 @@ PanelWindow {
 
   readonly property real closedThickness: 32
   readonly property real maxOpenThickness: 572
-  readonly property real batteryPanelExtra: 300
+  readonly property real batteryPanelExtra: 150
 
   implicitHeight: isHorizontal ? (
     launcherOpen ? Math.min(maxOpenThickness, 54 + launcher.desiredContentHeight) :
@@ -140,14 +142,15 @@ PanelWindow {
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
           Column {
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 6
             Workspaces { horizontal: false }
           }
         }
 
         Item {
-          anchors { top: parent.verticalCenter; bottom: parent.bottom; bottomMargin: 8; horizontalCenter: parent.horizontalCenter }
+          anchors { top: parent.verticalCenter; bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
           visible: !isHorizontal
           enabled: !parent.panelOpen
 
@@ -157,11 +160,21 @@ PanelWindow {
           Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
-          Column {
-            anchors.centerIn: parent
+          ColumnLayout {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
             spacing: 6
-            BatteryIndicator { batteryData: batteryData; horizontal: false; onClicked: root.batteryPanelOpen = !root.batteryPanelOpen }
-            Clock { horizontal: false }
+            BatteryIndicator {
+              Layout.alignment: Qt.AlignHCenter
+              batteryData: batteryData; horizontal: false
+              onClicked: root.batteryPanelOpen = !root.batteryPanelOpen
+            }
+            Clock {
+              Layout.alignment: Qt.AlignHCenter
+	      Layout.bottomMargin: 10
+	      Layout.rightMargin: 3
+              horizontal: false
+            }
           }
         }
       }
@@ -172,6 +185,7 @@ PanelWindow {
       batteryData: batteryData
       open: root.batteryPanelOpen
       barPosition: root.pos
+      isIsland: root.isIsland
       anchors.top: parent.top
       anchors.left: parent.left
       anchors.right: parent.right
