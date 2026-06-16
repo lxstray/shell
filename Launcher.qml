@@ -8,6 +8,7 @@ Item {
 
   property bool open: false
   property string barPosition: "top"
+  visible: root.open
 
   property real desiredContentHeight: 0
 
