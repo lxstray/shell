@@ -29,16 +29,13 @@ Item {
     id: searchArea
     anchors.left: parent.left; anchors.leftMargin: 8
     anchors.right: parent.right; anchors.rightMargin: 8
-    anchors.bottom: root.isBottom ? parent.bottom : undefined
-    anchors.bottomMargin: root.isBottom ? (root.open ? 8 : -56) : 0
 
-    y: root.isBottom ? 0 : (root.open ? 8 : -56)
+    y: root.isBottom ? parent.height - height - 8 : (root.open ? 8 : -56)
     height: 28
     opacity: root.open ? 1 : 0
 
-    Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on anchors.bottomMargin { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: 80 } }
+    Behavior on y { enabled: !root.isBottom; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
     color: "#1a1a1a"
     radius: 6
@@ -85,8 +82,7 @@ Item {
 
     opacity: root.open ? 1 : 0
 
-    Behavior on opacity { NumberAnimation { duration: 80 } }
-    Behavior on height { NumberAnimation { duration: 30; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
     function updateContentHeight() {
       root.desiredContentHeight = listView.count > 0
@@ -126,16 +122,16 @@ Item {
         height: 36
 
         Behavior on y {
-          NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+          NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
         }
       }
 
       addDisplaced: Transition {
-        NumberAnimation { properties: "y"; duration: 80; easing.type: Easing.OutCubic }
+        NumberAnimation { properties: "y"; duration: 150; easing.type: Easing.OutCubic }
       }
 
       removeDisplaced: Transition {
-        NumberAnimation { properties: "y"; duration: 80; easing.type: Easing.OutCubic }
+        NumberAnimation { properties: "y"; duration: 150; easing.type: Easing.OutCubic }
       }
 
       delegate: Item {

@@ -24,6 +24,8 @@ PanelWindow {
 
   property var scr: Quickshell.screens[0] || screen
 
+  onPosChanged: launcherOpen = false
+
   anchors.left: pos !== "right"
   anchors.right: pos !== "left"
   anchors.top: pos !== "bottom"
@@ -49,11 +51,11 @@ PanelWindow {
   implicitWidth: isHorizontal ? (scr ? scr.width : 800) : (launcherOpen ? maxOpenThickness : closedThickness)
 
   Behavior on implicitHeight {
-    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
   }
 
   Behavior on implicitWidth {
-    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
   }
 
   Rectangle {
@@ -81,7 +83,7 @@ PanelWindow {
         opacity: root.launcherOpen ? 0 : 1
 
         Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80 } }
+        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
         Workspaces { horizontal: true }
       }
@@ -96,7 +98,7 @@ PanelWindow {
         opacity: root.launcherOpen ? 0 : 1
 
         Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80 } }
+        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
         Clock { horizontal: true }
       }
@@ -111,7 +113,7 @@ PanelWindow {
         opacity: root.launcherOpen ? 0 : 1
 
         Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80 } }
+        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
         Column {
           anchors.centerIn: parent
@@ -129,7 +131,7 @@ PanelWindow {
         opacity: root.launcherOpen ? 0 : 1
 
         Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 80 } }
+        Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
         Column {
           anchors.centerIn: parent
@@ -143,10 +145,10 @@ PanelWindow {
       id: launcher
       open: root.launcherOpen
       barPosition: root.pos
-      anchors.top: isHorizontal ? (pos === "bottom" ? parent.top : (root.launcherOpen ? parent.top : barStrip.bottom)) : parent.top
-      anchors.left: isHorizontal ? parent.left : (pos === "right" ? parent.left : (root.launcherOpen ? parent.left : barStrip.right))
-      anchors.right: isHorizontal ? parent.right : (pos === "right" ? (root.launcherOpen ? parent.right : barStrip.left) : parent.right)
-      anchors.bottom: isHorizontal ? (pos === "bottom" ? (root.launcherOpen ? parent.bottom : barStrip.top) : parent.bottom) : parent.bottom
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
       anchors.topMargin: 0
       onAppLaunched: root.appLaunched()
       onCanceled: root.canceled()
