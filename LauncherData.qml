@@ -86,7 +86,7 @@ Item {
     var filtered = []
     for (var i = 0; i < allApps.length; i++) {
       var app = allApps[i]
-      if (!q || app.name.toLowerCase().indexOf(q) !== -1 ||
+      if (!q || (app.name && app.name.toLowerCase().indexOf(q) !== -1) ||
           (app.genericName && app.genericName.toLowerCase().indexOf(q) !== -1)) {
         filtered.push(app)
       }
