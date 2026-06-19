@@ -1,4 +1,14 @@
 {
-  "barPosition": "top",
-  "barStyle": "island"
+  "barPosition": "left",
+  "barStyle": "island",
+  "currentWallpaper": "/home/snxwlv/Pictures/Wallpapers/frieren_1.png",
+  "wallpaperHistory": [
+    "/home/snxwlv/Pictures/Wallpapers/frieren_1.png",
+    "/home/snxwlv/Pictures/Wallpapers/wallhaven-qrjqvl.png",
+    "/home/snxwlv/Pictures/Wallpapers/w-45.png",
+    "/home/snxwlv/Pictures/Wallpapers/wallhaven-rqgk8w.png",
+    "/home/snxwlv/Downloads/frieren_1.png",
+    "/home/snxwlv/Pictures/Wallpapers/wallhaven-yqej5x.png",
+    "/home/snxwlv/Pictures/Wallpapers/wallhaven-vpo9k3.png"
+  ]
 }

@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
 Window {
   id: root
@@ -56,7 +57,7 @@ Window {
           }
 
           Repeater {
-            model: ["Bar"]
+            model: ["Bar", "Wallpaper"]
 
             Rectangle {
               Layout.fillWidth: true
@@ -95,19 +96,24 @@ Window {
         Layout.fillHeight: true
         color: "#1a1a1a"
 
-        ColumnLayout {
-          anchors { top: parent.top; topMargin: 24; left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 24 }
-          spacing: 20
+        Item {
+          anchors.fill: parent
+          anchors.margins: 24
           visible: root.selectedSection === "Bar"
 
-          Text {
-            text: "Bar"
+          ColumnLayout {
+            anchors.fill: parent
+            spacing: 20
+
+            Text {
+              text: "Bar"
             color: "#eee"
             font { pixelSize: 18; weight: Font.Bold }
           }
 
           ColumnLayout {
             spacing: 8
+            Layout.fillWidth: true
 
             Text {
               text: "Position"
@@ -153,6 +159,7 @@ Window {
 
           ColumnLayout {
             spacing: 8
+            Layout.fillWidth: true
 
             Text {
               text: "Style"
@@ -189,6 +196,104 @@ Window {
                         root.settings.barStyle = modelData.toLowerCase()
                         root.settings.save()
                       }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          }
+        }
+
+        // Wallpaper page
+        Item {
+          anchors.fill: parent
+          anchors.margins: 24
+          visible: root.selectedSection === "Wallpaper"
+
+          ColumnLayout {
+            anchors.fill: parent
+            spacing: 16
+
+            Text {
+              text: "Wallpaper"
+              color: "#eee"
+              font { pixelSize: 18; weight: Font.Bold }
+            }
+
+            FileDialog {
+              id: wallpaperPicker
+              title: "Choose Wallpaper"
+              nameFilters: ["Images (*.jpg *.png *.jpeg *.webp)"]
+              onAccepted: {
+                if (root.settings) {
+                  var urlStr = String(wallpaperPicker.selectedFile)
+                  var path = urlStr.substring(7)
+                  if (path.length > 0) {
+                    root.settings.setWallpaper(path)
+                  }
+                }
+              }
+            }
+
+            Rectangle {
+              implicitHeight: 32
+              implicitWidth: browseLabel.width + 24
+              radius: 8
+              color: "#2a2a2a"
+              border { color: "#555"; width: 1 }
+
+              Text {
+                id: browseLabel
+                anchors.centerIn: parent
+                text: "Browse..."
+                color: "#eee"
+                font { pixelSize: 13 }
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: wallpaperPicker.open()
+              }
+            }
+
+            // Recent wallpapers
+            ColumnLayout {
+              spacing: 8
+
+              Text {
+                text: "Recent"
+                color: "#999"
+                font { pixelSize: 13 }
+                visible: root.settings && root.settings.wallpaperHistory.length > 0
+              }
+
+              Flow {
+                Layout.fillWidth: true
+                spacing: 8
+                visible: root.settings && root.settings.wallpaperHistory.length > 0
+
+                Repeater {
+                  model: root.settings ? root.settings.wallpaperHistory : []
+
+                  Rectangle {
+                    width: 80; height: 54; radius: 6
+                    color: "#2a2a2a"
+                    border { color: root.settings && root.settings.currentWallpaper === modelData ? "#4fc3f7" : "#444"; width: 2 }
+
+                    Image {
+                      anchors.fill: parent
+                      source: "file://" + modelData
+                      sourceSize { width: 160; height: 108 }
+                      fillMode: Image.PreserveAspectCrop
+                      asynchronous: true
+                    }
+
+                    MouseArea {
+                      anchors.fill: parent
+                      cursorShape: Qt.PointingHandCursor
+                      onClicked: { if (root.settings) root.settings.setWallpaper(modelData) }
                     }
                   }
                 }

@@ -27,6 +27,33 @@ PanelWindow {
   property var scr: Quickshell.screens[0] || screen
 
   BatteryData { id: batteryData }
+  VolumeData {
+    id: volumeData
+    onLevelChanged: showOverlay(volumeData.level, volumeData.icon, 1)
+  }
+  BrightnessData {
+    id: brightnessData
+    onLevelChanged: showOverlay(brightnessData.level, brightnessData.icon, 2)
+  }
+
+  property bool overlayActive: false
+  property real overlayLevel: 0
+  property string overlayIcon: ""
+  property int overlaySource: 0
+
+  Timer { id: overlayTimer; interval: 1500; onTriggered: root.overlayActive = false }
+
+  function showOverlay(level, icon, source) {
+    overlayLevel = level
+    overlayIcon = icon
+    overlaySource = source
+    overlayActive = true
+    overlayTimer.restart()
+  }
+
+  onOverlayActiveChanged: {
+    if (!overlayActive) overlaySource = 0
+  }
 
   onPosChanged: {
     launcherOpen = false
@@ -102,10 +129,10 @@ PanelWindow {
           anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
           spacing: 4
           visible: isHorizontal
-          enabled: !parent.panelOpen
+          enabled: !parent.panelOpen && !root.overlayActive
 
-          x: parent.panelOpen ? -120 : 0
-          opacity: parent.panelOpen ? 0 : 1
+          x: parent.panelOpen || root.overlayActive ? -120 : 0
+          opacity: parent.panelOpen || root.overlayActive ? 0 : 1
 
           Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -117,10 +144,10 @@ PanelWindow {
           anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
           spacing: 4
           visible: isHorizontal
-          enabled: !parent.panelOpen
+          enabled: !parent.panelOpen && !root.overlayActive
 
-          x: parent.panelOpen ? parent.width + 120 : 0
-          opacity: parent.panelOpen ? 0 : 1
+          x: parent.panelOpen || root.overlayActive ? parent.width + 120 : 0
+          opacity: parent.panelOpen || root.overlayActive ? 0 : 1
 
           Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -133,10 +160,10 @@ PanelWindow {
         Item {
           anchors { top: parent.top; topMargin: 8; bottom: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
           visible: !isHorizontal
-          enabled: !parent.panelOpen
+          enabled: !parent.panelOpen && !root.overlayActive
 
-          x: parent.panelOpen ? -90 : 0
-          opacity: parent.panelOpen ? 0 : 1
+          x: parent.panelOpen || root.overlayActive ? -90 : 0
+          opacity: parent.panelOpen || root.overlayActive ? 0 : 1
 
           Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -152,10 +179,10 @@ PanelWindow {
         Item {
           anchors { top: parent.verticalCenter; bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
           visible: !isHorizontal
-          enabled: !parent.panelOpen
+          enabled: !parent.panelOpen && !root.overlayActive
 
-          x: parent.panelOpen ? 90 : 0
-          opacity: parent.panelOpen ? 0 : 1
+          x: parent.panelOpen || root.overlayActive ? 90 : 0
+          opacity: parent.panelOpen || root.overlayActive ? 0 : 1
 
           Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
@@ -171,9 +198,101 @@ PanelWindow {
             }
             Clock {
               Layout.alignment: Qt.AlignHCenter
-	      Layout.bottomMargin: 10
-	      Layout.rightMargin: 3
+ 	      Layout.bottomMargin: 10
+ 	      Layout.rightMargin: 3
               horizontal: false
+            }
+          }
+        }
+
+        // Overlay for volume/brightness indicator
+        Item {
+          anchors.fill: parent
+          visible: root.overlayActive
+          opacity: root.overlayActive ? 1 : 0
+
+          Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+
+          readonly property real lineSize: Math.round(root.closedThickness * 0.1)
+
+          // Horizontal mode
+          RowLayout {
+            anchors { left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 24; verticalCenter: parent.verticalCenter }
+            spacing: 16
+            visible: isHorizontal
+
+            Text {
+              text: root.overlayIcon
+              font.family: "Material Symbols Rounded"
+              font.pixelSize: 22
+              color: "#eee"
+              Layout.preferredWidth: 32
+            }
+
+            Rectangle {
+              Layout.fillWidth: true
+              height: parent.parent.lineSize
+              radius: Math.round(height / 2)
+              color: "#2a2a2a"
+
+              Rectangle {
+                width: parent.width * root.overlayLevel
+                height: parent.height
+                radius: parent.radius
+                color: "#eee"
+
+                Behavior on width { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+              }
+            }
+
+            Text {
+              text: Math.round(root.overlayLevel * 100) + "%"
+              color: "#eee"
+              font.pixelSize: 13
+              font.weight: Font.Medium
+              Layout.preferredWidth: 40
+              horizontalAlignment: Text.AlignRight
+            }
+          }
+
+          // Vertical mode
+          ColumnLayout {
+            anchors { top: parent.top; topMargin: 16; bottom: parent.bottom; bottomMargin: 16; horizontalCenter: parent.horizontalCenter }
+            spacing: 12
+            visible: !isHorizontal
+
+            Text {
+              text: root.overlayIcon
+              font.family: "Material Symbols Rounded"
+              font.pixelSize: 20
+              color: "#eee"
+              Layout.alignment: Qt.AlignHCenter
+            }
+
+            Rectangle {
+              Layout.fillHeight: true
+              width: parent.parent.lineSize
+              radius: Math.round(width / 2)
+              color: "#2a2a2a"
+              Layout.alignment: Qt.AlignHCenter
+
+              Rectangle {
+                width: parent.width
+                height: parent.height * root.overlayLevel
+                radius: parent.radius
+                color: "#eee"
+                anchors.bottom: parent.bottom
+
+                Behavior on height { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+              }
+            }
+
+            Text {
+              text: Math.round(root.overlayLevel * 100) + "%"
+              color: "#eee"
+              font.pixelSize: 11
+              font.weight: Font.Medium
+              Layout.alignment: Qt.AlignHCenter
             }
           }
         }

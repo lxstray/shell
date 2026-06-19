@@ -1,4 +1,3 @@
-- wallpaper
 - clipboard
 - fullscrean mode
 - not island mode
