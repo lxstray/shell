@@ -1,13 +1,17 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
+import "services"
+import "utils"
 
 PanelWindow {
   id: root
 
   property bool launcherOpen: false
   property bool batteryPanelOpen: false
+  property bool wifiOpen: false
   property var settings: null
 
   readonly property real barRatio: 0.25
@@ -27,10 +31,28 @@ PanelWindow {
   property var scr: Quickshell.screens[0] || screen
 
   BatteryData { id: batteryData }
+
+  readonly property bool audioMuted: Pipewire.defaultAudioSink?.audio?.muted ?? false
+
   VolumeData {
     id: volumeData
-    onLevelChanged: showOverlay(volumeData.level, volumeData.icon, 1)
+    onLevelChanged: {
+      if (root.audioMuted && volumeData.level > 0) {
+        var s = Pipewire.defaultAudioSink
+        if (s?.audio) s.audio.muted = false
+      }
+      showOverlay(volumeData.level, volumeData.icon, 1)
+    }
   }
+
+  PwObjectTracker {
+    objects: [ Pipewire.defaultAudioSink ]
+  }
+
+  onAudioMutedChanged: {
+    if (root.overlayActive) showOverlay(volumeData.level, volumeData.icon, 1)
+  }
+
   BrightnessData {
     id: brightnessData
     onLevelChanged: showOverlay(brightnessData.level, brightnessData.icon, 2)
@@ -44,8 +66,13 @@ PanelWindow {
   Timer { id: overlayTimer; interval: 1500; onTriggered: root.overlayActive = false }
 
   function showOverlay(level, icon, source) {
-    overlayLevel = level
-    overlayIcon = icon
+    if (source === 1 && root.audioMuted) {
+      overlayLevel = 0
+      overlayIcon = "volume_off"
+    } else {
+      overlayLevel = level
+      overlayIcon = icon
+    }
     overlaySource = source
     overlayActive = true
     overlayTimer.restart()
@@ -58,6 +85,7 @@ PanelWindow {
   onPosChanged: {
     launcherOpen = false
     batteryPanelOpen = false
+    wifiOpen = false
   }
 
   anchors.left: pos !== "right"
@@ -74,7 +102,7 @@ PanelWindow {
   margins.left: pos === "left" ? (isIsland ? 8 : 0) : (isIsland ? (isHorizontal ? islandMargin : verticalIslandMargin) : 0)
   margins.right: pos === "right" ? (isIsland ? 8 : 0) : (isIsland ? (isHorizontal ? islandMargin : verticalIslandMargin) : 0)
 
-  WlrLayershell.keyboardFocus: launcherOpen || batteryPanelOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+  WlrLayershell.keyboardFocus: launcherOpen || batteryPanelOpen || wifiOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
   WlrLayershell.layer: WlrLayer.Top
   WlrLayershell.exclusionMode: ExclusionMode.Normal
   WlrLayershell.exclusiveZone: 32
@@ -82,15 +110,18 @@ PanelWindow {
   readonly property real closedThickness: 32
   readonly property real maxOpenThickness: 572
   readonly property real batteryPanelExtra: 150
+  readonly property real wifiPanelExtra: 380
 
   implicitHeight: isHorizontal ? (
     launcherOpen ? Math.min(maxOpenThickness, 54 + launcher.desiredContentHeight) :
     batteryPanelOpen ? batteryPanelExtra :
+    wifiOpen ? wifiPanelExtra :
     closedThickness
   ) : (scr ? scr.height : 600)
   implicitWidth: isHorizontal ? (scr ? scr.width : 800) : (
     launcherOpen ? maxOpenThickness :
     batteryPanelOpen ? batteryPanelExtra :
+    wifiOpen ? wifiPanelExtra :
     closedThickness
   )
 
@@ -122,7 +153,7 @@ PanelWindow {
         height: isHorizontal ? 32 : parent.height
         clip: true
 
-        readonly property bool panelOpen: root.launcherOpen || root.batteryPanelOpen
+        readonly property bool panelOpen: root.launcherOpen || root.batteryPanelOpen || root.wifiOpen
 
         // Horizontal mode content (top/bottom bar)
         RowLayout {
@@ -151,6 +182,20 @@ PanelWindow {
 
           Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
           Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+
+          // Wifi icon
+          Text {
+            text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+            font.family: "Material Symbols Rounded"
+            font.pixelSize: 18
+            color: Nmcli.active ? "#eee" : "#888"
+
+            MouseArea {
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.wifiOpen = !root.wifiOpen
+            }
+          }
 
           BatteryIndicator { batteryData: batteryData; onClicked: root.batteryPanelOpen = !root.batteryPanelOpen }
           Clock { horizontal: true }
@@ -191,6 +236,22 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             spacing: 6
+
+            // Wifi icon for vertical mode
+            Text {
+              Layout.alignment: Qt.AlignHCenter
+              text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+              font.family: "Material Symbols Rounded"
+              font.pixelSize: 18
+              color: Nmcli.active ? "#eee" : "#888"
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.wifiOpen = !root.wifiOpen
+              }
+            }
+
             BatteryIndicator {
               Layout.alignment: Qt.AlignHCenter
               batteryData: batteryData; horizontal: false
@@ -198,8 +259,8 @@ PanelWindow {
             }
             Clock {
               Layout.alignment: Qt.AlignHCenter
- 	      Layout.bottomMargin: 10
- 	      Layout.rightMargin: 3
+  	      Layout.bottomMargin: 10
+  	      Layout.rightMargin: 3
               horizontal: false
             }
           }
@@ -207,9 +268,11 @@ PanelWindow {
 
         // Overlay for volume/brightness indicator
         Item {
+          id: overlayItem
           anchors.fill: parent
           visible: root.overlayActive
           opacity: root.overlayActive ? 1 : 0
+          clip: true
 
           Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
@@ -234,6 +297,7 @@ PanelWindow {
               height: parent.parent.lineSize
               radius: Math.round(height / 2)
               color: "#2a2a2a"
+              clip: true
 
               Rectangle {
                 width: parent.width * root.overlayLevel
@@ -267,6 +331,8 @@ PanelWindow {
               font.pixelSize: 20
               color: "#eee"
               Layout.alignment: Qt.AlignHCenter
+              Layout.preferredWidth: 24
+              horizontalAlignment: Text.AlignHCenter
             }
 
             Rectangle {
@@ -275,6 +341,7 @@ PanelWindow {
               radius: Math.round(width / 2)
               color: "#2a2a2a"
               Layout.alignment: Qt.AlignHCenter
+              clip: true
 
               Rectangle {
                 width: parent.width
@@ -293,6 +360,8 @@ PanelWindow {
               font.pixelSize: 11
               font.weight: Font.Medium
               Layout.alignment: Qt.AlignHCenter
+              Layout.preferredWidth: 30
+              horizontalAlignment: Text.AlignHCenter
             }
           }
         }
@@ -310,6 +379,36 @@ PanelWindow {
       anchors.right: parent.right
       anchors.bottom: parent.bottom
       onCanceled: root.batteryPanelOpen = false
+    }
+
+    // Wifi popout panel
+    Item {
+      id: wifiPanel
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      visible: root.wifiOpen
+
+      WifiPopout {
+        id: wifiPopout
+        open: root.wifiOpen
+        anchors.fill: parent
+        onOpenPasswordDialog: network => {
+          wifiPasswordPopout.network = network
+          wifiPasswordPopout.open = true
+          wifiPopout.open = false
+        }
+        onCloseRequested: root.wifiOpen = false
+      }
+
+      WirelessPassword {
+        id: wifiPasswordPopout
+        anchors.fill: parent
+        onCloseRequested: {
+          wifiPopout.open = true
+        }
+      }
     }
 
     Launcher {
@@ -330,6 +429,7 @@ PanelWindow {
   onLauncherOpenChanged: {
     if (launcherOpen) {
       batteryPanelOpen = false
+      wifiOpen = false
       Qt.callLater(function() {
         launcher.focusSearch()
       })
@@ -339,9 +439,17 @@ PanelWindow {
   onBatteryPanelOpenChanged: {
     if (batteryPanelOpen) {
       launcherOpen = false
+      wifiOpen = false
       Qt.callLater(function() {
         batteryPanel.forceActiveFocus()
       })
+    }
+  }
+
+  onWifiOpenChanged: {
+    if (wifiOpen) {
+      launcherOpen = false
+      batteryPanelOpen = false
     }
   }
 }

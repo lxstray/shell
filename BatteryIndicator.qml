@@ -28,22 +28,6 @@ Item {
     spacing: 3
     visible: root.horizontal
 
-    Text {
-      text: {
-        if (root.profile === "power-saver") return "energy_savings_leaf"
-        if (root.profile === "performance") return "rocket_launch"
-        return "balance"
-      }
-      font.family: "Material Symbols Rounded"
-      font.pixelSize: 12
-      color: {
-        if (!root.avail) return "#444"
-        if (root.profile === "power-saver") return "#66bb6a"
-        if (root.profile === "performance") return "#ef5350"
-        return "#4fc3f7"
-      }
-    }
-
     // Battery icon (drawn)
     Item {
       width: 18
@@ -86,23 +70,16 @@ Item {
         color: root.chg ? "#4fc3f7" : "#888"
       }
     }
-  }
-
-  // Vertical mode: stacked (profile on top of battery)
-  ColumnLayout {
-    anchors.centerIn: parent
-    spacing: 2
-    visible: !root.horizontal
 
     Text {
-      Layout.alignment: Qt.AlignHCenter
+      Layout.topMargin: 2
       text: {
         if (root.profile === "power-saver") return "energy_savings_leaf"
         if (root.profile === "performance") return "rocket_launch"
         return "balance"
       }
       font.family: "Material Symbols Rounded"
-      font.pixelSize: 14
+      font.pixelSize: 12
       color: {
         if (!root.avail) return "#444"
         if (root.profile === "power-saver") return "#66bb6a"
@@ -110,6 +87,13 @@ Item {
         return "#4fc3f7"
       }
     }
+  }
+
+  // Vertical mode: stacked (battery on top, profile below)
+  ColumnLayout {
+    anchors.centerIn: parent
+    spacing: 2
+    visible: !root.horizontal
 
     Item {
       Layout.alignment: Qt.AlignHCenter
@@ -151,6 +135,23 @@ Item {
         height: 4
         radius: 1
         color: root.chg ? "#4fc3f7" : "#888"
+      }
+    }
+
+    Text {
+      Layout.alignment: Qt.AlignHCenter
+      text: {
+        if (root.profile === "power-saver") return "energy_savings_leaf"
+        if (root.profile === "performance") return "rocket_launch"
+        return "balance"
+      }
+      font.family: "Material Symbols Rounded"
+      font.pixelSize: 14
+      color: {
+        if (!root.avail) return "#444"
+        if (root.profile === "power-saver") return "#66bb6a"
+        if (root.profile === "performance") return "#ef5350"
+        return "#4fc3f7"
       }
     }
   }

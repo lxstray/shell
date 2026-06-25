@@ -40,6 +40,7 @@ Item {
 
       ColumnLayout {
         anchors.fill: parent
+        anchors.topMargin: 4
         spacing: 4
 
         // Header (horizontal mode: all in one row, vertical mode: stacked)
@@ -47,26 +48,40 @@ Item {
           Layout.fillWidth: true
           spacing: root.isHorizontal ? 4 : 2
 
-          // Battery icon + percentage + time/charging
+          // Back arrow + battery icon + percentage + time/charging
           RowLayout {
             Layout.fillWidth: true
             spacing: 8
 
+            Text {
+              text: "arrow_back"
+              font.family: "Material Symbols Rounded"
+              font.pixelSize: 20
+              color: "#aaa"
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.canceled()
+              }
+            }
+
             Item {
-              width: 40
-              height: 22
+              width: root.isHorizontal ? 40 : 28
+              height: root.isHorizontal ? 22 : 14
 
 
               Rectangle {
                 anchors.fill: parent
                 radius: 5
                 color: "transparent"
-                border { color: root.chg ? "#4fc3f7" : "#888"; width: 2 }
+                border { color: root.chg ? "#4fc3f7" : "#888"; width: root.isHorizontal ? 2 : 1 }
 
                 Rectangle {
-                  x: 2; y: 2
-                  width: Math.max(0, (parent.width - 4) * Math.min(1, root.pct / 100))
-                  height: parent.height - 4
+                  x: root.isHorizontal ? 2 : 1
+                  y: root.isHorizontal ? 2 : 1
+                  width: Math.max(0, (parent.width - (root.isHorizontal ? 4 : 2)) * Math.min(1, root.pct / 100))
+                  height: parent.height - (root.isHorizontal ? 4 : 2)
                   radius: 3
                   color: root.chg ? "#4fc3f7" : (root.pct <= 15 ? "#ef5350" : "#eee")
                 }
@@ -75,16 +90,16 @@ Item {
                   anchors.centerIn: parent
                   text: "\u26A1"
                   color: "#111"
-                  font.pixelSize: 16
+                  font.pixelSize: root.isHorizontal ? 16 : 11
                   visible: root.chg
                 }
               }
 
               Rectangle {
-                x: parent.width - 2
-                y: parent.height / 2 - 4
-                width: 6
-                height: 8
+                x: parent.width - (root.isHorizontal ? 2 : 1)
+                y: parent.height / 2 - (root.isHorizontal ? 4 : 3)
+                width: root.isHorizontal ? 6 : 4
+                height: root.isHorizontal ? 8 : 6
                 radius: 1
                 color: root.chg ? "#4fc3f7" : "#888"
               }
@@ -93,7 +108,7 @@ Item {
             Text {
               text: Math.round(root.pct) + "%"
               color: "#eee"
-              font { pixelSize: 30; weight: Font.Medium }
+              font { pixelSize: root.isHorizontal ? 30 : 20; weight: Font.Medium }
             }
 
             // Time (inline for horizontal, hidden here — shown below for vertical)
