@@ -12,6 +12,7 @@ PanelWindow {
   property bool launcherOpen: false
   property bool batteryPanelOpen: false
   property bool wifiOpen: false
+  property bool volumeMixerOpen: false
   property bool powerMenuOpen: false
   property var settings: null
 
@@ -42,7 +43,7 @@ PanelWindow {
         var s = Pipewire.defaultAudioSink
         if (s?.audio) s.audio.muted = false
       }
-      showOverlay(volumeData.level, volumeData.icon, 1)
+      if (!root.anyPanelOpen) showOverlay(volumeData.level, volumeData.icon, 1)
     }
   }
 
@@ -66,6 +67,13 @@ PanelWindow {
 
   Timer { id: overlayTimer; interval: 1500; onTriggered: root.overlayActive = false }
 
+  function formatVolumeIcon(level, muted) {
+    if (muted || level === 0) return "volume_off"
+    if (level > 0.66) return "volume_up"
+    if (level > 0.33) return "volume_down"
+    return "volume_mute"
+  }
+
   function showOverlay(level, icon, source) {
     if (source === 1 && root.audioMuted) {
       overlayLevel = 0
@@ -87,6 +95,7 @@ PanelWindow {
     launcherOpen = false
     batteryPanelOpen = false
     wifiOpen = false
+    volumeMixerOpen = false
   }
 
   onPosChanged: closeAllPanels()
@@ -100,13 +109,14 @@ PanelWindow {
   readonly property real islandMargin: scr ? Math.round(axisSize * (1 - barRatio) / 2) : 0
   readonly property real verticalIslandMargin: scr ? Math.round(axisSize * (1 - verticalBarRatio) / 2) : 0
 
-  readonly property bool anyPanelOpen: launcherOpen || batteryPanelOpen || wifiOpen
+  readonly property bool anyPanelOpen: launcherOpen || batteryPanelOpen || wifiOpen || volumeMixerOpen
   property bool shouldBeFull: anyPanelOpen
 
   readonly property real closedThickness: 32
   readonly property real maxOpenThickness: 572
   readonly property real batteryPanelExtra: 150
   readonly property real wifiPanelExtra: 380
+  readonly property real mixerPanelExtra: 380
 
   onAnyPanelOpenChanged: {
     if (anyPanelOpen) shouldBeFull = true
@@ -127,11 +137,13 @@ PanelWindow {
   readonly property real currentPanelHeight: launcherOpen ? Math.min(maxOpenThickness, 54 + launcher.desiredContentHeight) :
     batteryPanelOpen ? batteryPanelExtra :
     wifiOpen ? wifiPanelExtra :
+    volumeMixerOpen ? mixerPanelExtra :
     closedThickness
 
   readonly property real currentPanelWidth: launcherOpen ? maxOpenThickness :
     batteryPanelOpen ? batteryPanelExtra :
     wifiOpen ? wifiPanelExtra :
+    volumeMixerOpen ? mixerPanelExtra :
     closedThickness
 
   implicitHeight: isHorizontal ? (shouldBeFull ? (scr?.height ?? 600) : closedThickness + (isIsland ? 8 : 0)) : (scr?.height ?? 600)
@@ -212,6 +224,19 @@ PanelWindow {
             Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
 
             Text {
+              text: root.formatVolumeIcon(volumeData.level, root.audioMuted || volumeData.muted)
+              font.family: "Material Symbols Rounded"
+              font.pixelSize: 18
+              color: root.audioMuted || volumeData.muted ? "#ef5350" : "#eee"
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.volumeMixerOpen = !root.volumeMixerOpen
+              }
+            }
+
+            Text {
               text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
               font.family: "Material Symbols Rounded"
               font.pixelSize: 18
@@ -275,6 +300,21 @@ PanelWindow {
               anchors.horizontalCenter: parent.horizontalCenter
               anchors.bottom: parent.bottom
               spacing: 6
+
+              Text {
+		Layout.bottomMargin: -8
+                Layout.alignment: Qt.AlignHCenter
+                text: root.formatVolumeIcon(volumeData.level, root.audioMuted || volumeData.muted)
+                font.family: "Material Symbols Rounded"
+                font.pixelSize: 20
+                color: root.audioMuted || volumeData.muted ? "#ef5350" : "#eee"
+
+                MouseArea {
+                  anchors.fill: parent
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: root.volumeMixerOpen = !root.volumeMixerOpen
+                }
+              }
 
               Text {
                 Layout.alignment: Qt.AlignHCenter
@@ -470,6 +510,13 @@ PanelWindow {
           onOpenSettings: root.openSettings()
         }
       }
+
+      VolumeMixer {
+        id: volumeMixer
+        anchors.fill: parent
+        open: root.volumeMixerOpen
+        onCloseRequested: root.volumeMixerOpen = false
+      }
     }
   }
 
@@ -477,6 +524,7 @@ PanelWindow {
     if (launcherOpen) {
       batteryPanelOpen = false
       wifiOpen = false
+      volumeMixerOpen = false
       powerMenuOpen = false
       Qt.callLater(function() {
         launcher.focusSearch()
@@ -488,6 +536,7 @@ PanelWindow {
     if (batteryPanelOpen) {
       launcherOpen = false
       wifiOpen = false
+      volumeMixerOpen = false
       powerMenuOpen = false
       Qt.callLater(function() {
         batteryPanel.forceActiveFocus()
@@ -499,6 +548,16 @@ PanelWindow {
     if (wifiOpen) {
       launcherOpen = false
       batteryPanelOpen = false
+      volumeMixerOpen = false
+      powerMenuOpen = false
+    }
+  }
+
+  onVolumeMixerOpenChanged: {
+    if (volumeMixerOpen) {
+      launcherOpen = false
+      batteryPanelOpen = false
+      wifiOpen = false
       powerMenuOpen = false
     }
   }
@@ -508,6 +567,7 @@ PanelWindow {
       launcherOpen = false
       batteryPanelOpen = false
       wifiOpen = false
+      volumeMixerOpen = false
     }
   }
 
