@@ -64,7 +64,7 @@ PanelWindow {
       property: "x"
       to: 0
       duration: 300
-      easing.type: Easing.OutCubic
+      easing.type: Easing.OutBack
     }
 
     NumberAnimation {
