@@ -73,6 +73,7 @@ Item {
 
     Text {
       Layout.topMargin: 2
+      Layout.rightMargin: -5
       text: {
         if (root.profile === "power-saver") return "energy_savings_leaf"
         if (root.profile === "performance") return "rocket_launch"
@@ -140,6 +141,7 @@ Item {
 
     Text {
       Layout.alignment: Qt.AlignHCenter
+      Layout.bottomMargin: -10
       text: {
         if (root.profile === "power-saver") return "energy_savings_leaf"
         if (root.profile === "performance") return "rocket_launch"

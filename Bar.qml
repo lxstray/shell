@@ -12,6 +12,7 @@ PanelWindow {
   property bool launcherOpen: false
   property bool batteryPanelOpen: false
   property bool wifiOpen: false
+  property bool powerMenuOpen: false
   property var settings: null
 
   readonly property real barRatio: 0.25
@@ -199,6 +200,18 @@ PanelWindow {
 
           BatteryIndicator { batteryData: batteryData; onClicked: root.batteryPanelOpen = !root.batteryPanelOpen }
           Clock { horizontal: true }
+          Text {
+            text: "power_settings_new"
+            font.family: "Material Symbols Rounded"
+            font.pixelSize: 18
+            color: "#888"
+
+            MouseArea {
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.powerMenuOpen = !root.powerMenuOpen
+            }
+          }
         }
 
         // Vertical mode content (left/right bar)
@@ -240,6 +253,7 @@ PanelWindow {
             // Wifi icon for vertical mode
             Text {
               Layout.alignment: Qt.AlignHCenter
+	      Layout.bottomMargin: -7
               text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
               font.family: "Material Symbols Rounded"
               font.pixelSize: 18
@@ -258,10 +272,23 @@ PanelWindow {
               onClicked: root.batteryPanelOpen = !root.batteryPanelOpen
             }
             Clock {
+	      Layout.rightMargin: 1
               Layout.alignment: Qt.AlignHCenter
-  	      Layout.bottomMargin: 10
-  	      Layout.rightMargin: 3
               horizontal: false
+            }
+            Text {
+              Layout.alignment: Qt.AlignHCenter
+              Layout.bottomMargin: 10
+              text: "power_settings_new"
+              font.family: "Material Symbols Rounded"
+              font.pixelSize: 16
+              color: "#888"
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.powerMenuOpen = !root.powerMenuOpen
+              }
             }
           }
         }
@@ -430,8 +457,9 @@ PanelWindow {
     if (launcherOpen) {
       batteryPanelOpen = false
       wifiOpen = false
+      powerMenuOpen = false
       Qt.callLater(function() {
-        launcher.focusSearch()
+        batteryPanel.forceActiveFocus()
       })
     }
   }
@@ -440,6 +468,7 @@ PanelWindow {
     if (batteryPanelOpen) {
       launcherOpen = false
       wifiOpen = false
+      powerMenuOpen = false
       Qt.callLater(function() {
         batteryPanel.forceActiveFocus()
       })
@@ -450,6 +479,20 @@ PanelWindow {
     if (wifiOpen) {
       launcherOpen = false
       batteryPanelOpen = false
+      powerMenuOpen = false
     }
+  }
+
+  onPowerMenuOpenChanged: {
+    if (powerMenuOpen) {
+      launcherOpen = false
+      batteryPanelOpen = false
+      wifiOpen = false
+    }
+  }
+
+  PowerMenu {
+    menuOpen: root.powerMenuOpen
+    onCloseRequested: root.powerMenuOpen = false
   }
 }
