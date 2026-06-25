@@ -75,7 +75,7 @@ Item {
                 anchors.fill: parent
                 radius: 5
                 color: "transparent"
-                border { color: root.chg ? "#4fc3f7" : "#888"; width: root.isHorizontal ? 2 : 1 }
+                border { color: root.chg ? "#69f0ae" : "#888"; width: root.isHorizontal ? 2 : 1 }
 
                 Rectangle {
                   x: root.isHorizontal ? 2 : 1
@@ -83,7 +83,7 @@ Item {
                   width: Math.max(0, (parent.width - (root.isHorizontal ? 4 : 2)) * Math.min(1, root.pct / 100))
                   height: parent.height - (root.isHorizontal ? 4 : 2)
                   radius: 3
-                  color: root.chg ? "#4fc3f7" : (root.pct <= 15 ? "#ef5350" : "#eee")
+                  color: root.chg ? "#69f0ae" : (root.pct <= 15 ? "#ef5350" : "#eee")
                 }
 
                 Text {
@@ -101,7 +101,7 @@ Item {
                 width: root.isHorizontal ? 6 : 4
                 height: root.isHorizontal ? 8 : 6
                 radius: 1
-                color: root.chg ? "#4fc3f7" : "#888"
+                color: root.chg ? "#69f0ae" : "#888"
               }
             }
 
@@ -128,7 +128,7 @@ Item {
 
             Text {
               text: root.chg ? "Charging" : "Discharging"
-              color: root.chg ? "#4fc3f7" : "#888"
+              color: root.chg ? "#69f0ae" : "#888"
               font.pixelSize: 14
               visible: root.avail && root.isHorizontal
             }
@@ -142,7 +142,7 @@ Item {
 
             Text {
               text: root.chg ? "Charging" : "Discharging"
-              color: root.chg ? "#4fc3f7" : "#888"
+              color: root.chg ? "#69f0ae" : "#888"
               font.pixelSize: 14
             }
 

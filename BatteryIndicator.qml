@@ -21,143 +21,77 @@ Item {
     onClicked: root.clicked()
   }
 
-  // Horizontal mode: side by side
-  RowLayout {
-    id: rowH
+  Item {
     anchors.centerIn: parent
-    spacing: 3
-    visible: root.horizontal
+    width: 18
+    height: root.horizontal ? 10 : 14
 
-    // Battery icon (drawn)
-    Item {
-      width: 18
-      height: 10
-
-      Rectangle {
-        anchors.fill: parent
-        radius: 2
-        color: "transparent"
-        border { color: root.chg ? "#4fc3f7" : "#888"; width: 1 }
-
-        Rectangle {
-          x: 1; y: 1
-          width: Math.max(0, (parent.width - 2) * Math.min(1, root.pct / 100))
-          height: parent.height - 2
-          radius: 1
-          color: {
-            if (!root.avail) return "#444"
-            if (root.chg) return "#4fc3f7"
-            if (root.pct <= 15) return "#ef5350"
-            return "#eee"
-          }
-        }
-
-        Text {
-          anchors.centerIn: parent
-          text: "\u26A1"
-          color: "#111"
-          font.pixelSize: 8
-          visible: root.chg
-        }
-      }
+    Rectangle {
+      anchors.fill: parent
+      anchors.rightMargin: root.horizontal ? 0 : 2
+      anchors.bottomMargin: root.horizontal ? 0 : 4
+      radius: 2
+      color: "transparent"
+      border { color: root.chg ? "#69f0ae" : "#888"; width: 1 }
 
       Rectangle {
-        x: parent.width - 1
-        y: parent.height / 2 - 2
-        width: 3
-        height: 4
+        x: 1; y: 1
+        width: Math.max(0, (parent.width - 2) * Math.min(1, root.pct / 100))
+        height: parent.height - 2
         radius: 1
-        color: root.chg ? "#4fc3f7" : "#888"
+        color: {
+          if (!root.avail) return "#444"
+          if (root.chg) return "#69f0ae"
+          if (root.pct <= 15) return "#ef5350"
+          return "#eee"
+        }
       }
     }
 
-    Text {
-      Layout.topMargin: 2
-      Layout.rightMargin: -5
-      text: {
-        if (root.profile === "power-saver") return "energy_savings_leaf"
-        if (root.profile === "performance") return "rocket_launch"
-        return "balance"
+    Rectangle {
+      x: parent.width - 1
+      y: parent.height / 2 - 2
+      width: 3
+      height: 4
+      radius: 1
+      color: root.chg ? "#69f0ae" : "#888"
+    }
+
+    Item {
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      anchors.rightMargin: -2
+      anchors.bottomMargin: -5
+      width: 14
+      height: 14
+
+      Rectangle {
+        anchors.fill: parent
+        radius: 7
+        color: "#111"
+        border { color: "#333"; width: 1 }
       }
-      font.family: "Material Symbols Rounded"
-      font.pixelSize: 12
-      color: {
-        if (!root.avail) return "#444"
-        if (root.profile === "power-saver") return "#66bb6a"
-        if (root.profile === "performance") return "#ef5350"
-        return "#4fc3f7"
+
+      Text {
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: 0.5
+        text: {
+          if (root.profile === "power-saver") return "energy_savings_leaf"
+          if (root.profile === "performance") return "rocket_launch"
+          return "balance"
+        }
+        font.family: "Material Symbols Rounded"
+        font.pixelSize: 11
+        color: {
+          if (!root.avail) return "#444"
+          if (root.profile === "power-saver") return "#66bb6a"
+          if (root.profile === "performance") return "#ef5350"
+          return "#4fc3f7"
+        }
       }
     }
   }
 
-  // Vertical mode: stacked (battery on top, profile below)
-  ColumnLayout {
-    anchors.centerIn: parent
-    spacing: 2
-    visible: !root.horizontal
-
-    Item {
-      Layout.alignment: Qt.AlignHCenter
-      width: 18
-      height: 10
-
-      Rectangle {
-        anchors.fill: parent
-        radius: 2
-        color: "transparent"
-        border { color: root.chg ? "#4fc3f7" : "#888"; width: 1 }
-
-        Rectangle {
-          x: 1; y: 1
-          width: Math.max(0, (parent.width - 2) * Math.min(1, root.pct / 100))
-          height: parent.height - 2
-          radius: 1
-          color: {
-            if (!root.avail) return "#444"
-            if (root.chg) return "#4fc3f7"
-            if (root.pct <= 15) return "#ef5350"
-            return "#eee"
-          }
-        }
-
-        Text {
-          anchors.centerIn: parent
-          text: "\u26A1"
-          color: "#111"
-          font.pixelSize: 8
-          visible: root.chg
-        }
-      }
-
-      Rectangle {
-        x: parent.width - 1
-        y: parent.height / 2 - 2
-        width: 3
-        height: 4
-        radius: 1
-        color: root.chg ? "#4fc3f7" : "#888"
-      }
-    }
-
-    Text {
-      Layout.alignment: Qt.AlignHCenter
-      Layout.bottomMargin: -10
-      text: {
-        if (root.profile === "power-saver") return "energy_savings_leaf"
-        if (root.profile === "performance") return "rocket_launch"
-        return "balance"
-      }
-      font.family: "Material Symbols Rounded"
-      font.pixelSize: 14
-      color: {
-        if (!root.avail) return "#444"
-        if (root.profile === "power-saver") return "#66bb6a"
-        if (root.profile === "performance") return "#ef5350"
-        return "#4fc3f7"
-      }
-    }
-  }
-
-  implicitHeight: root.horizontal ? 20 : 28
-  implicitWidth: root.horizontal ? rowH.width + 4 : 22
+  implicitHeight: root.horizontal ? 14 : 20
+  implicitWidth: root.horizontal ? 24 : 22
 }
