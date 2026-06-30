@@ -1,9 +1,13 @@
 - clipboard
+- notification of low battery level
+- when installing and removing apps, app launcher don't updates
+- notifications, full bar transforming in one notifications
+- calendar, and mote to it power button, and mb smth else to free space
 - lock screen(like in caelestia)
 - fullscrean mode
 - not island mode
-- volume and miksher
 - player1
+- fix apps list and icons in volume mixer
 - fix menu devices in volume menu
 - apps in tray and menu for it (telegram, steam, obs, vesktop etc)
 - system information(cpu, ram, disk, temp, wif speed)

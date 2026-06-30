@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
+import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
 import "services"
@@ -14,6 +15,8 @@ PanelWindow {
   property bool wifiOpen: false
   property bool volumeMixerOpen: false
   property bool powerMenuOpen: false
+  property bool trayMenuOpen: false
+  property var currentTrayMenu: null
   property var settings: null
 
   readonly property real barRatio: 0.25
@@ -67,6 +70,18 @@ PanelWindow {
 
   Timer { id: overlayTimer; interval: 1500; onTriggered: root.overlayActive = false }
 
+  Timer {
+    id: trayCloseTimer
+    interval: 250
+    onTriggered: {
+      if (!root.trayMenuHovered) root.trayMenuOpen = false
+    }
+  }
+
+  function keepTrayOpen() {
+    trayCloseTimer.stop()
+  }
+
   function formatVolumeIcon(level, muted) {
     if (muted || level === 0) return "volume_off"
     if (level > 0.66) return "volume_up"
@@ -96,6 +111,8 @@ PanelWindow {
     batteryPanelOpen = false
     wifiOpen = false
     volumeMixerOpen = false
+    trayMenuOpen = false
+    trayMenuHovered = false
   }
 
   onPosChanged: closeAllPanels()
@@ -110,24 +127,18 @@ PanelWindow {
   readonly property real verticalIslandMargin: scr ? Math.round(axisSize * (1 - verticalBarRatio) / 2) : 0
 
   readonly property bool anyPanelOpen: launcherOpen || batteryPanelOpen || wifiOpen || volumeMixerOpen
-  property bool shouldBeFull: anyPanelOpen
+  readonly property bool shouldBeFull: anyPanelOpen || trayMenuOpen
 
   readonly property real closedThickness: 32
   readonly property real maxOpenThickness: 572
   readonly property real batteryPanelExtra: 150
   readonly property real wifiPanelExtra: 380
   readonly property real mixerPanelExtra: 380
-
-  onAnyPanelOpenChanged: {
-    if (anyPanelOpen) shouldBeFull = true
-    else collapseTimer.restart()
-  }
-
-  Timer {
-    id: collapseTimer
-    interval: 200
-    onTriggered: shouldBeFull = anyPanelOpen
-  }
+  property bool trayMenuHovered: false
+  property bool trayPanelAlive: false
+  property real trayMenuY: 0
+  property alias trayMenuLayer: contentContainer
+  readonly property real trayMaxHeight: isHorizontal ? 572 : 400
 
   WlrLayershell.keyboardFocus: anyPanelOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
   WlrLayershell.layer: WlrLayer.Top
@@ -156,7 +167,7 @@ PanelWindow {
     MouseArea {
       anchors.fill: parent
       z: 0
-      enabled: anyPanelOpen
+      enabled: anyPanelOpen || trayMenuOpen
       onClicked: closeAllPanels()
     }
 
@@ -222,6 +233,8 @@ PanelWindow {
 
             Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
             Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+
+            Tray { barRef: root }
 
             Text {
               text: root.formatVolumeIcon(volumeData.level, root.audioMuted || volumeData.muted)
@@ -300,6 +313,8 @@ PanelWindow {
               anchors.horizontalCenter: parent.horizontalCenter
               anchors.bottom: parent.bottom
               spacing: 6
+
+              Tray { horizontal: false; barRef: root }
 
               Text {
 		Layout.bottomMargin: -8
@@ -517,6 +532,108 @@ PanelWindow {
         open: root.volumeMixerOpen
         onCloseRequested: root.volumeMixerOpen = false
       }
+
+      Loader {
+        id: trayPanelLoader
+        active: trayPanelAlive
+        x: isHorizontal ? barContainer.width - 283 : barContainer.width
+        y: isHorizontal ?
+          pos === "top" ? closedThickness : parent.height - closedThickness - 572 :
+          0
+
+        sourceComponent: Rectangle {
+          id: menuRect
+          color: "#111"
+          clip: true
+
+          y: isHorizontal ? 0 : Math.max(0, Math.min(220 - height / 2, contentContainer.height - height))
+
+          radius: 0
+          topLeftRadius: isHorizontal ? (pos === "top" ? 0 : 8) : (pos === "left" ? 0 : 8)
+          topRightRadius: isHorizontal ? (pos === "top" ? 0 : 8) : (pos === "right" ? 0 : 8)
+          bottomLeftRadius: isHorizontal ? (pos === "bottom" ? 0 : 8) : (pos === "left" ? 0 : 8)
+          bottomRightRadius: isHorizontal ? (pos === "bottom" ? 0 : 8) : (pos === "right" ? 0 : 8)
+
+          width: 182
+          height: Math.max(24, Math.min(trayContent.implicitHeight, trayMaxHeight))
+
+          transformOrigin: isHorizontal ?
+            (pos === "top" ? Item.Top : Item.Bottom) :
+            (pos === "left" ? Item.Left : Item.Right)
+
+          transform: Translate {
+            id: slideTranslate
+            property bool animate: false
+            Behavior on x { enabled: slideTranslate.animate; NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+            Behavior on y { enabled: slideTranslate.animate; NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+          }
+
+          opacity: 0
+          scale: 0.85
+
+          Behavior on opacity { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+          Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+
+          Component.onCompleted: {
+            if (isHorizontal) {
+              slideTranslate.y = pos === "top" ? -15 : 15
+            } else {
+              slideTranslate.x = pos === "left" ? -15 : 15
+            }
+            slideTranslate.animate = true
+            slideTranslate.x = 0
+            slideTranslate.y = 0
+
+            opacity = 1
+            scale = 1
+
+            if (menuArea.containsMouse) {
+              trayMenuHovered = true
+              keepTrayOpen()
+            } else {
+              trayCloseTimer.restart()
+            }
+          }
+
+          Connections {
+            target: root
+            function onTrayMenuOpenChanged() {
+              if (!root.trayMenuOpen) {
+                if (isHorizontal) {
+                  slideTranslate.y = pos === "top" ? -15 : 15
+                } else {
+                  slideTranslate.x = pos === "left" ? -15 : 15
+                }
+                opacity = 0
+                scale = 0.85
+              }
+            }
+          }
+
+          TrayPanel {
+            id: trayContent
+            anchors.fill: parent
+            trayItemMenu: currentTrayMenu
+          }
+
+          MouseArea {
+            id: menuArea
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+
+            onEntered: {
+              trayMenuHovered = true
+              keepTrayOpen()
+            }
+
+            onExited: {
+              trayMenuHovered = false
+              trayCloseTimer.restart()
+            }
+          }
+        }
+      }
     }
   }
 
@@ -526,6 +643,7 @@ PanelWindow {
       wifiOpen = false
       volumeMixerOpen = false
       powerMenuOpen = false
+      trayMenuOpen = false
       Qt.callLater(function() {
         launcher.focusSearch()
       })
@@ -538,6 +656,7 @@ PanelWindow {
       wifiOpen = false
       volumeMixerOpen = false
       powerMenuOpen = false
+      trayMenuOpen = false
       Qt.callLater(function() {
         batteryPanel.forceActiveFocus()
       })
@@ -550,6 +669,7 @@ PanelWindow {
       batteryPanelOpen = false
       volumeMixerOpen = false
       powerMenuOpen = false
+      trayMenuOpen = false
     }
   }
 
@@ -559,6 +679,7 @@ PanelWindow {
       batteryPanelOpen = false
       wifiOpen = false
       powerMenuOpen = false
+      trayMenuOpen = false
     }
   }
 
@@ -568,6 +689,29 @@ PanelWindow {
       batteryPanelOpen = false
       wifiOpen = false
       volumeMixerOpen = false
+      trayMenuOpen = false
+    }
+  }
+
+  onTrayMenuOpenChanged: {
+    if (trayMenuOpen) {
+      launcherOpen = false
+      batteryPanelOpen = false
+      wifiOpen = false
+      volumeMixerOpen = false
+      powerMenuOpen = false
+      trayPanelAlive = true
+      trayPanelDeferTimer.stop()
+    } else {
+      trayPanelDeferTimer.restart()
+    }
+  }
+
+  Timer {
+    id: trayPanelDeferTimer
+    interval: 400
+    onTriggered: {
+      trayPanelAlive = false
     }
   }
 
