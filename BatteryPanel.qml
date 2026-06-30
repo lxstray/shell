@@ -19,6 +19,7 @@ Item {
   readonly property bool isHorizontal: barPosition === "top" || barPosition === "bottom"
 
   signal canceled()
+  signal openPowerMenu()
 
   clip: true
   visible: root.open
@@ -208,9 +209,18 @@ Item {
               activeColor: "#ef5350"
               onClicked: PowerProfiles.profile = PowerProfile.Performance
             }
-          }
 
-          // Buttons: stacked for left/right bar
+            ProfileButton {
+              Layout.fillWidth: true
+              Layout.preferredHeight: 52
+              label: "Power"
+              iconText: "power_settings_new"
+              onClicked: root.openPowerMenu()
+            }
+          }
+        }
+
+        // Buttons: stacked for left/right bar
           ColumnLayout {
             visible: !root.isHorizontal
             Layout.fillWidth: true
@@ -218,7 +228,7 @@ Item {
 
             ProfileButton {
               Layout.fillWidth: true
-              Layout.preferredHeight: 82
+              Layout.preferredHeight: 62
               label: "Saver"
               iconText: "energy_savings_leaf"
               active: root.profile === "power-saver"
@@ -228,7 +238,7 @@ Item {
 
             ProfileButton {
               Layout.fillWidth: true
-              Layout.preferredHeight: 82
+              Layout.preferredHeight: 62
               label: "Balanced"
               iconText: "balance"
               active: root.profile === "balanced"
@@ -238,20 +248,26 @@ Item {
 
             ProfileButton {
               Layout.fillWidth: true
-              Layout.preferredHeight: 82
-              Layout.bottomMargin: 10
+              Layout.preferredHeight: 62
               label: "Perf"
               iconText: "rocket_launch"
               active: root.profile === "performance"
               activeColor: "#ef5350"
               onClicked: PowerProfiles.profile = PowerProfile.Performance
             }
+
+            ProfileButton {
+              Layout.fillWidth: true
+              Layout.preferredHeight: 62
+              Layout.bottomMargin: 10
+              label: "Power"
+              iconText: "power_settings_new"
+              onClicked: root.openPowerMenu()
+            }
           }
         }
       }
     }
-  }
-
   component ProfileButton: Item {
     id: btn
     property string label: ""

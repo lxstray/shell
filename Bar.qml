@@ -222,6 +222,27 @@ PanelWindow {
             Workspaces { horizontal: true }
           }
 
+          Clock {
+            anchors.centerIn: parent
+            visible: isHorizontal
+
+            opacity: parent.panelOpen || root.overlayActive ? 0 : 1
+
+            Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+          }
+
+          Clock {
+            anchors.centerIn: parent
+            visible: !isHorizontal
+            horizontal: false
+
+            x: parent.panelOpen || root.overlayActive ? 90 : 0
+            opacity: parent.panelOpen || root.overlayActive ? 0 : 1
+
+            Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 80; easing.type: Easing.OutQuad } }
+          }
+
           RowLayout {
             anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
             spacing: 4
@@ -263,19 +284,6 @@ PanelWindow {
             }
 
             BatteryIndicator { batteryData: batteryData; onClicked: root.batteryPanelOpen = !root.batteryPanelOpen }
-            Clock { horizontal: true }
-            Text {
-              text: "power_settings_new"
-              font.family: "Material Symbols Rounded"
-              font.pixelSize: 18
-              color: "#888"
-
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.powerMenuOpen = !root.powerMenuOpen
-              }
-            }
           }
 
           // Vertical mode content (left/right bar)
@@ -333,7 +341,7 @@ PanelWindow {
 
               Text {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.bottomMargin: -7
+                Layout.bottomMargin: -6
                 text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
                 font.family: "Material Symbols Rounded"
                 font.pixelSize: 18
@@ -348,27 +356,9 @@ PanelWindow {
 
               BatteryIndicator {
                 Layout.alignment: Qt.AlignHCenter
+		Layout.bottomMargin: 8
                 batteryData: batteryData; horizontal: false
                 onClicked: root.batteryPanelOpen = !root.batteryPanelOpen
-              }
-              Clock {
-                Layout.rightMargin: 1
-                Layout.alignment: Qt.AlignHCenter
-                horizontal: false
-              }
-              Text {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.bottomMargin: 10
-                text: "power_settings_new"
-                font.family: "Material Symbols Rounded"
-                font.pixelSize: 16
-                color: "#888"
-
-                MouseArea {
-                  anchors.fill: parent
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: root.powerMenuOpen = !root.powerMenuOpen
-                }
               }
             }
           }
@@ -483,6 +473,7 @@ PanelWindow {
         isIsland: root.isIsland
         anchors.fill: parent
         onCanceled: root.batteryPanelOpen = false
+        onOpenPowerMenu: root.powerMenuOpen = true
       }
 
       Item {
@@ -536,7 +527,7 @@ PanelWindow {
       Loader {
         id: trayPanelLoader
         active: trayPanelAlive
-        x: isHorizontal ? barContainer.width - 283 : barContainer.width
+        x: isHorizontal ? barContainer.width - 195 : barContainer.width
         y: isHorizontal ?
           pos === "top" ? closedThickness : parent.height - closedThickness - 572 :
           0
@@ -546,7 +537,7 @@ PanelWindow {
           color: "#111"
           clip: true
 
-          y: isHorizontal ? 0 : Math.max(0, Math.min(220 - height / 2, contentContainer.height - height))
+          y: isHorizontal ? 0 : Math.max(0, Math.min(280 - height / 2, contentContainer.height - height))
 
           radius: 0
           topLeftRadius: isHorizontal ? (pos === "top" ? 0 : 8) : (pos === "left" ? 0 : 8)

@@ -45,7 +45,7 @@ PanelWindow {
 
   readonly property var actions: [
     { icon: "lock", label: "Lock", cmd: ["loginctl", "lock-session"] },
-    { icon: "power_settings_new", label: "Shutdown", cmd: ["systemctl", "poweroff"] },
+    { icon: "power_off", label: "Shutdown", cmd: ["systemctl", "poweroff"] },
     { icon: "restart_alt", label: "Reboot", cmd: ["systemctl", "reboot"] },
     { icon: "settings", label: "UEFI", cmd: ["systemctl", "reboot", "--firmware-setup"] },
     { icon: "logout", label: "Logout", cmd: ["sh", "-c", "niri msg action quit --skip-confirmation"] }

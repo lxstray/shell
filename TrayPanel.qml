@@ -21,7 +21,7 @@ Item {
     currentHandle = trayItemMenu
   }
 
-  implicitHeight: Math.min(column.implicitHeight, 250)
+  implicitHeight: Math.min(column.implicitHeight, 170)
 
   Flickable {
     id: flick
